@@ -6,17 +6,31 @@ const PEOPLE_URL = 'people/:id'
 //CrossDomain
 const OPTS ={ crossDomain:true }
 
-const onPeopleResponse = function(persona){
-    console.log(`Hola, yo soy  ${persona.name}`)
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+function obtenerPersonaje(id, callback){
 
-function obtenerPersonaje(id){
     const url = `${API_URL}${PEOPLE_URL.replace(':id',id)}`
-    $.get(url,OPTS, onPeopleResponse)
-}
 
-obtenerPersonaje(19)
-obtenerPersonaje(1)
-obtenerPersonaje(2)
-obtenerPersonaje(3)
-obtenerPersonaje(4)
+    $.get(url, OPTS, callback).fail(function(){
+        console.log(`Sucedio un error, no se pudo obtener el personaje ${id}`)
+    })
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+obtenerPersonaje(1, function(persona){
+    console.log(`Hola, yo soy  ${persona.name}`)
+
+    obtenerPersonaje(2, function(persona){
+        console.log(`Hola, yo soy  ${persona.name}`)
+
+        obtenerPersonaje(3, function(persona){
+            console.log(`Hola, yo soy  ${persona.name}`)
+
+            obtenerPersonaje(4, function(persona){
+                console.log(`Hola, yo soy  ${persona.name}`)
+            })
+        })
+    })
+})
+
+
