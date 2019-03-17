@@ -14,9 +14,9 @@
         <div id="violeta" class="color violeta right" data-color="violeta"></div>
         <div id="naranja" class="color naranja left" data-color="naranja"></div>
         <div id="verde" class="color verde right" data-color="verde"></div>
-        <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
+        <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">¡Empezar a jugar!</button>
       </div>
-
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
       <!-- SCRIPT DEL JUEGO -->
       <script>
         const celeste = document.getElementById('celeste')
@@ -24,16 +24,29 @@
         const naranja = document.getElementById('naranja')
         const verde = document.getElementById('verde')
         const btnEmpezar = document.getElementById('btnEmpezar')
+        const ULTIMO_NIVEL = 1
   
         class Juego {
           constructor() {
+            this.inicializar = this.inicializar.bind(this)
             this.inicializar()
             this.generarSecuencia()
+            setTimeout(()=>{
             this.siguienteNivel()
+            },1000)
           }
-  
+          toggleBtnEmpezar(){
+            if(btnEmpezar.classList.contains('hide')){
+              btnEmpezar.classList.remove('hide')
+            }else{
+              btnEmpezar.classList.add('hide')
+            }
+          }
+
           inicializar() {
-            btnEmpezar.classList.add('hide')
+            this.siguienteNivel = this.siguienteNivel.bind(this)
+            this.elegirColor =  this.elegirColor.bind(this)
+            this.toggleBtnEmpezar()
             this.nivel = 1
             this.colores = {
                 celeste,
@@ -44,10 +57,11 @@
           }
 
          generarSecuencia(){
-              this.secuencia = new Array(10).fill(0).map(n => Math.floor(Math.random() * 4))
+              this.secuencia = new Array(ULTIMO_NIVEL).fill(0).map(n => Math.floor(Math.random() * 4))
           }
 
           siguienteNivel(){
+              this.subnivel = 0
               this.iluminarSecuencia()
               this.agregarEventosClick()
           }
@@ -62,6 +76,20 @@
                     return 'naranja'
                 case 3:
                     return 'verde'
+                default:
+                    break;
+            }
+          }
+          transformarColorANumero(color){
+            switch (color) {
+                case 'celeste':
+                    return 0
+                case 'violeta':
+                    return 1
+                case 'naranja':
+                    return 2
+                case 'verde':
+                    return 3
                 default:
                     break;
             }
@@ -90,10 +118,49 @@
               this.colores.naranja.addEventListener('click', this.elegirColor)
           }
 
+          eliminarEventosClick(){
+            this.colores.celeste.removeEventListener('click', this.elegirColor)
+            this.colores.verde.removeEventListener('click', this.elegirColor)
+            this.colores.violeta.removeEventListener('click', this.elegirColor)
+            this.colores.naranja.removeEventListener('click', this.elegirColor)
+          }
+
+          elegirColor(ev){
+              const nombreColor = ev.target.dataset.color
+              const numeroColor = this.transformarColorANumero(nombreColor)
+              this.iluminarColor(nombreColor)
+              if(numeroColor === this.secuencia[this.subnivel]){
+                this.subnivel++
+                if(this.subnivel === this.nivel){
+                  this.nivel++
+                  this.eliminarEventosClick()
+                  if(this.nivel === (ULTIMO_NIVEL+1)){
+                    //Ganó!
+                    this.ganoElJuego()
+                  }else{
+                    setTimeout(this.siguienteNivel, 2000) 
+                  }
+                }
+              }else{
+                //Perdió
+                this.perdioElJuego()
+              }
+          }
+
+          ganoElJuego(){
+            swal('😎', '¡Felicitaciones, ganaste el juego!', 'success').then(this.inicializar())
+          }
+          perdioElJuego(){
+            swal('😔', '¡Perdiste!', 'error')
+                  .then(() => {
+                    this.eliminarEventosClick()
+                    this.inicializar()
+                  })
+          }
+
         }
-  
         function empezarJuego() {
-          juego = new Juego()
+          window.juego = new Juego()
         }
       </script>
 
