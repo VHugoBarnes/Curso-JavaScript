@@ -14,27 +14,48 @@
         <div id="violeta" class="color violeta right" data-color="violeta"></div>
         <div id="naranja" class="color naranja left" data-color="naranja"></div>
         <div id="verde" class="color verde right" data-color="verde"></div>
-        <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
+        <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">¡Empezar a jugar!</button>
       </div>
-
+      <!-- SWEET ALERT IMPLEMENTACIÓN -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
       <!-- SCRIPT DEL JUEGO -->
       <script>
+        /*
+        *Declaro una variable constante de cada uno de las secciones del circulo.
+        *Son constantes porque en ningún momento deberá cambiar su valor.
+        *Además, la línea "document.getElementById()" hace referencia al id de la etiqueta.
+        */
         const celeste = document.getElementById('celeste')
         const violeta = document.getElementById('violeta')
         const naranja = document.getElementById('naranja')
         const verde = document.getElementById('verde')
         const btnEmpezar = document.getElementById('btnEmpezar')
-  
+        const ULTIMO_NIVEL = 10
+        
+        /*
+        *Creo una clase "Juego" donde estará la lógica de todo nuestro juego.
+        */
         class Juego {
+          //El método "constructor()" es el constructor de la clase, aquí estarán todos los demás
+          //métodos que se llamarán cuando se inicie el juego.
           constructor() {
+            //El método .bind(this) ancla el método al contexto de la clase y no al contexto de "window".
+            this.inicializar = this.inicializar.bind(this) 
             this.inicializar()
             this.generarSecuencia()
+            //setTimeout da un tiempo de espera en milisegundos para que una función se ejecute.
+            setTimeout(()=>{
             this.siguienteNivel()
+            },1000)
           }
-  
+
+          //El método inicializar inicializa el nivel, aparece el botón y llama al método de sigNivel y elegirColor.
           inicializar() {
-            btnEmpezar.classList.add('hide')
+            this.siguienteNivel = this.siguienteNivel.bind(this)
+            this.elegirColor =  this.elegirColor.bind(this)
+            btnEmpezar.classList.toggle('hide')
             this.nivel = 1
+            //Propiedad color.
             this.colores = {
                 celeste,
                 violeta,
@@ -43,15 +64,22 @@
             }
           }
 
+         // Genera un array de 10 elementos, que primero son rellenados todos en 0. Después
+         //genera un número aleatorio del 0 al 3 (4 números) y lo rellena en el array.
          generarSecuencia(){
-              this.secuencia = new Array(10).fill(0).map(n => Math.floor(Math.random() * 4))
+              this.secuencia = new Array(ULTIMO_NIVEL).fill(0).map(n => Math.floor(Math.random() * 4))
           }
 
+          //El método siguienteNivel establece el subnivel a 0 (el subnivel es la posición del array secuencia).
+          //Llama a la función ilumniarSecuencia() que muestra el array dependiendo el nivel.
+          //Llama a la función agregarEventosClick() para que podamos seleccionar el color que se ilumine.
           siguienteNivel(){
+              this.subnivel = 0
               this.iluminarSecuencia()
               this.agregarEventosClick()
           }
 
+          //Transforma el número pasado por parámetro a una cadena de texto.
           transformarNumeroAColor(num){
             switch (num) {
                 case 0:
@@ -67,22 +95,48 @@
             }
           }
 
+          //Transforma la cadena de texto con el color a un valor entero.
+          transformarColorANumero(color){
+            switch (color) {
+                case 'celeste':
+                    return 0
+                case 'violeta':
+                    return 1
+                case 'naranja':
+                    return 2
+                case 'verde':
+                    return 3
+                default:
+                    break;
+            }
+          }
+
+          //Método para iluminar los div según el código de color que tenga.
           iluminarSecuencia(){
+            //Se declara la variable como let para reducir su bloque de modificación.
               for(let i=0; i<this.nivel; i++){
+                //Constante color que llama a la función y pasa por parámetro el array con los nums aleatorios
                 const color = this.transformarNumeroAColor(this.secuencia[i])
+                //Establece un tiempo que va incrementando a medida que el for vaya aumentando.
+                //Pasa por parametro el valor color a la función iluminar color. 
                 setTimeout(() => this.iluminarColor(color), 1000*i)
               }
           }
 
+          //Se pasa por parámetro una cadena de texto "color" .
           iluminarColor(color){
+            //Se ilumina el color pasado por parámetro.
               this.colores[color].classList.add('light')
+              //Se apaga el color pasado en 350ms
               setTimeout(() => this.apagarColor(color), 350)
           }
 
+          //Apaga el color iluminado pasado por parámetro.
           apagarColor(color){
             this.colores[color].classList.remove('light')
           }
 
+          //Le agrega a cada color un evento 'click' y al ejecutarse se llama a 'elegirColor'.
           agregarEventosClick(){
               this.colores.celeste.addEventListener('click', this.elegirColor)
               this.colores.verde.addEventListener('click', this.elegirColor)
@@ -90,10 +144,65 @@
               this.colores.naranja.addEventListener('click', this.elegirColor)
           }
 
+          //Elimina el evento 'click' a cada uno de los que se les dió anteriormente.
+          eliminarEventosClick(){
+            this.colores.celeste.removeEventListener('click', this.elegirColor)
+            this.colores.verde.removeEventListener('click', this.elegirColor)
+            this.colores.violeta.removeEventListener('click', this.elegirColor)
+            this.colores.naranja.removeEventListener('click', this.elegirColor)
+          }
+
+          //elegirColor es el evento de 'agregarEventosClick'
+          elegirColor(ev){
+            //Se declara una variable nombreColor igualado a
+            // ev.target (a dónde estamos apuntando)
+            //
+            const nombreColor = ev.target.dataset.color
+            //numeroColor se inicializa con el número que le corresponde a cada color.
+            const numeroColor = this.transformarColorANumero(nombreColor)
+            this.iluminarColor(nombreColor)
+            //Si el número del color al que le dimos click es igual al numero de la secuencia con el subíndice
+            //de la secuencia se ejecuta el código:
+            if(numeroColor === this.secuencia[this.subnivel]){
+                this.subnivel++
+                //Sí el subnivel es igual que el nivel, avanzamos de nivel.
+                if(this.subnivel === this.nivel){
+                  this.nivel++
+                  this.eliminarEventosClick()
+                  //Si el nivel es el último, ganó
+                  if(this.nivel === (ULTIMO_NIVEL+1)){
+                    //Ganó!
+                    this.ganoElJuego()
+                  }else{ //Si no es el último, que siga avanzando.
+                    setTimeout(this.siguienteNivel, 2000) 
+                  }
+                }
+            }else{
+                //Si no es el color de la secuencia entonces pierdes :(
+                this.perdioElJuego()
+              }
+          }
+
+          //GANÓ
+          ganoElJuego(){
+            swal('😎', '¡Felicitaciones, ganaste el juego!', 'success').then(this.inicializar())
+          }
+
+          //PERDIÓ
+          perdioElJuego(){
+            swal('😔', '¡Perdiste!', 'error')
+                  .then(() => {
+                    this.eliminarEventosClick()
+                    this.inicializar()
+                  })
+          }
+
         }
-  
+
+        //Esta función es la primera en ejecutarse, es llamada cuando presionas el botón,
+        //crea una instancia de la clase juego y desencadena todos los métodos.
         function empezarJuego() {
-          juego = new Juego()
+          window.juego = new Juego()
         }
       </script>
 
